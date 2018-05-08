@@ -15,6 +15,8 @@
  */
 package com.example.android.pets;
 
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
@@ -26,6 +28,11 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
+
+import com.example.android.pets.data.PetContract.PetEntry;
+import com.example.android.pets.data.PetDbHelper;
+
 
 /**
  * Allows user to create a new pet or edit an existing one.
@@ -45,6 +52,11 @@ public class EditorActivity extends AppCompatActivity {
     private Spinner mGenderSpinner;
 
     /**
+     * to create PetDbHelper instance
+     */
+    PetDbHelper mDbHelper;
+
+    /**
      * Gender of the pet. The possible values are:
      * 0 for unknown gender, 1 for male, 2 for female.
      */
@@ -60,6 +72,10 @@ public class EditorActivity extends AppCompatActivity {
         mBreedEditText = findViewById(R.id.edit_pet_breed);
         mWeightEditText = findViewById(R.id.edit_pet_weight);
         mGenderSpinner = findViewById(R.id.spinner_gender);
+
+        // To access our database, we instantiate our subclass of SQLiteOpenHelper
+        // and pass the context, which is the current activity.
+        mDbHelper = new PetDbHelper(this);
 
         setupSpinner();
     }
@@ -117,7 +133,8 @@ public class EditorActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
-                // Do nothing for now
+                insertPet();
+                finish();   //to exit activity
                 return true;
             // Respond to a click on the "Delete" menu option
             case R.id.action_delete:
@@ -130,5 +147,32 @@ public class EditorActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Input pet from user to store in db
+     **/
+    private void insertPet() {
+
+        String nameOfPet = mNameEditText.getText().toString().trim();
+        String mBreedOfPet = mBreedEditText.getText().toString().trim();
+        int mWeightOfPet = Integer.parseInt(mWeightEditText.getText().toString());
+
+        // Create and/or open a database to write from it
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(PetEntry.COLUMN_PET_NAME, nameOfPet);
+        values.put(PetEntry.COLUMN_PET_BREED, mBreedOfPet);
+        values.put(PetEntry.COLUMN_PET_GENDER, mGender);
+        values.put(PetEntry.COLUMN_PET_WEIGHT, mWeightOfPet);
+
+        long rowId = db.insert(PetEntry.TABLE_NAME, null, values);
+        if (rowId == -1) {
+            Toast.makeText(getApplicationContext(), "Error saving Pet", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getApplicationContext(), "Pet saved with ID: " + rowId, Toast.LENGTH_SHORT).show();
+        }
+
     }
 }
