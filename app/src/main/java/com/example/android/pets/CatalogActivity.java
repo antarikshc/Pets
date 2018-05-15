@@ -16,17 +16,20 @@
 package com.example.android.pets;
 
 import android.app.LoaderManager;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.example.android.pets.data.PetContract;
@@ -77,6 +80,24 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
 
         // Initiate the loader
         getLoaderManager().initLoader(PET_LOADER, null, this);
+
+        // Setup the item click listener
+        petListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+
+                Intent intent = new Intent(CatalogActivity.this, EditorActivity.class);
+
+                // Create URI with the item's id
+                Uri currentPetUri = ContentUris.withAppendedId(PetContract.CONTENT_URI, id);
+
+                // Set the URI on the data field of the intent
+                intent.setData(currentPetUri);
+
+                // Start the EditorActivity
+                startActivity(intent);
+            }
+        });
 
     }
 
@@ -138,11 +159,11 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
 
         // This loader will execute the ContentProvider's query method on a background thread
         return new CursorLoader(this,   // Parent activity context
-                PetContract.CONTENT_URI,   // Provider content URI to query
-                projection,             // Columns to include in the resulting Cursor
-                null,                   // No selection clause
-                null,                   // No selection arguments
-                null);                  // Default sort order
+                PetContract.CONTENT_URI,        // Provider content URI to query
+                projection,                     // Columns to include in the resulting Cursor
+                null,                  // No selection clause
+                null,              // No selection arguments
+                null);                // Default sort order
 
     }
 
